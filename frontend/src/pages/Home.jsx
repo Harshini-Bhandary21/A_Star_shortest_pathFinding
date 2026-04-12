@@ -1,25 +1,35 @@
 import { useState } from "react";
-import { getSolution } from "../services/api";
 import Grid from "../components/Grid";
 import Controls from "../components/Controls";
+import Canvas from "../components/Canvas";
+import { detectMaze, solveMaze, startRobot } from "../services/api";
 
 export default function Home() {
-  const [grid, setGrid] = useState([]);
   const [path, setPath] = useState([]);
-
-  const handleSolve = async () => {
-    const data = await getSolution();
-    setGrid(data.grid);
-    setPath(data.path);
-  };
+  const [start, setStart] = useState([0, 0]);
+  const [end, setEnd] = useState([3, 5]);
 
   return (
-    <div className="container">
-      <h1>Maze Solver 🚀</h1>
+    <div>
+      <h1>Maze Solver</h1>
 
-      <Controls onSolve={handleSolve} />
+      <Controls
+        detect={detectMaze}
+        solve={async () => {
+          const res = await solveMaze(start, end);
+          setPath(res.data.path);
+        }}
+        start={startRobot}
+      />
 
-      {grid.length > 0 && <Grid grid={grid} path={path} />}
+      <Grid
+        path={path}
+        start={start}
+        end={end}
+        setStart={setStart}
+        setEnd={setEnd}
+      />
+      <Canvas path={path} start={start} end={end} />
     </div>
   );
 }

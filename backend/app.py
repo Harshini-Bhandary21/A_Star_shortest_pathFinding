@@ -1,23 +1,55 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from a_star import astar
-from vision import get_grid
 
-app = Flask(_name_)
+from vision import *
+from a_star import a_star
+from robot import *
+
+app = Flask(__name__)
 CORS(app)
 
+maze = None
+last_path = []
 
-@app.route("/solve")
+
+@app.route("/detect")
+def detect():
+    global maze
+
+    frame = get_frame()
+    contour = find_maze(frame)
+    corners = get_corners(contour)
+
+    if corners is not None:
+        frame = warp(frame, corners)
+
+    processed = preprocess(frame)
+    maze = detect_edges(processed)
+
+    return jsonify({"status": "maze detected"})
+
+
+@app.route("/solve", methods=["POST"])
 def solve():
-    grid = get_grid()
+    global last_path
 
-    start = (0, 0)
-    end = (3, 5)
+    data = request.json
+    start = tuple(data["start"])
+    end = tuple(data["end"])
 
-    path = astar(grid, start, end)
+    path = a_star(maze, start, end)
+    last_path = path
 
-    return jsonify({"grid": grid, "path": path})
+    return jsonify({"path": path})
 
 
-if _name_ == "_main_":
+@app.route("/start")
+def start():
+    cmds = path_to_commands(last_path)
+    send_to_robot(cmds)
+
+    return jsonify({"status": "robot moving"})
+
+
+if __name__ == "__main__":
     app.run(debug=True)
