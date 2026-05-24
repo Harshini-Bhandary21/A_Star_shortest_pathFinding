@@ -1,39 +1,61 @@
-export default function Grid({ path, start, end, setStart, setEnd }) {
-  const rows = 4,
-    cols = 6;
+function Grid({ grid, path, setStart, setEnd, start, end }) {
+
+  const handleClick = (row, col) => {
+    if (!start) {
+      setStart([row, col]);
+    } else if (!end) {
+      setEnd([row, col]);
+    }
+  };
 
   return (
-    <div
-      style={{ display: "grid", gridTemplateColumns: `repeat(${cols},60px)` }}
-    >
-      {[...Array(rows * cols)].map((_, i) => {
-        const r = Math.floor(i / cols),
-          c = i % cols;
+    <div style={{ marginTop: "20px" }}>
+      <h2>Maze Grid</h2>
+      <p>Click once = Start, Click again = End</p>
 
-        const isPath = path.some((p) => p[0] === r && p[1] === c);
-        const isStart = start[0] === r && start[1] === c;
-        const isEnd = end[0] === r && end[1] === c;
+      {grid.map((row, rowIndex) => (
+        <div key={rowIndex} style={{ display: "flex" }}>
+          {row.map((cell, colIndex) => {
 
-        return (
-          <div
-            key={i}
-            onClick={() => setStart([r, c])}
-            onDoubleClick={() => setEnd([r, c])}
-            style={{
-              width: 60,
-              height: 60,
-              border: "1px solid",
-              background: isStart
-                ? "green"
-                : isEnd
-                  ? "red"
-                  : isPath
-                    ? "yellow"
-                    : "white",
-            }}
-          />
-        );
-      })}
+            // 🔥 CORRECT PATH CHECK
+            const isPath = path?.some(
+              ([r, c]) => r === rowIndex && c === colIndex
+            );
+
+            let bgColor = "white";
+
+            // 🔥 PRIORITY ORDER (IMPORTANT)
+            if (grid[rowIndex][colIndex] === 1) {
+              bgColor = "black"; // wall
+            }
+            else if (start && rowIndex === start[0] && colIndex === start[1]) {
+              bgColor = "blue"; // start
+            }
+            else if (end && rowIndex === end[0] && colIndex === end[1]) {
+              bgColor = "red"; // end
+            }
+            else if (isPath) {
+              bgColor = "green"; // path ✅
+            }
+
+            return (
+              <div
+                key={`${rowIndex}-${colIndex}`} // 🔥 important
+                onClick={() => handleClick(rowIndex, colIndex)}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  border: "1px solid gray",
+                  backgroundColor: bgColor,
+                  cursor: "pointer"
+                }}
+              />
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
+
+export default Grid;

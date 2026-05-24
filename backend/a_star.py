@@ -1,50 +1,42 @@
 import heapq
 
+def astar(grid, start, end):
+    rows, cols = len(grid), len(grid[0])
 
-def heuristic(a, b):
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    def heuristic(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
+    open_list = []
+    heapq.heappush(open_list, (0, start))
 
-def get_neighbors(node, maze):
-    i, j = node
-    dirs = maze[node]
-    neighbors = []
-
-    if not dirs["up"] and i > 0:
-        neighbors.append((i - 1, j))
-    if not dirs["down"] and i < 3:
-        neighbors.append((i + 1, j))
-    if not dirs["left"] and j > 0:
-        neighbors.append((i, j - 1))
-    if not dirs["right"] and j < 5:
-        neighbors.append((i, j + 1))
-
-    return neighbors
-
-
-def a_star(maze, start, end):
-    open_set = [(0, start)]
     came_from = {}
     g_score = {start: 0}
 
-    while open_set:
-        _, current = heapq.heappop(open_set)
+    while open_list:
+        _, current = heapq.heappop(open_list)
 
         if current == end:
             path = []
             while current in came_from:
-                path.append(current)
+                path.append(list(current))
                 current = came_from[current]
-            path.append(start)
-            return path[::-1]
+            path.append(list(start))
+            path.reverse()
+            return path
 
-        for neighbor in get_neighbors(current, maze):
-            temp = g_score[current] + 1
+        for dx, dy in [(0,1),(1,0),(0,-1),(-1,0)]:
+            neighbor = (current[0] + dx, current[1] + dy)
 
-            if neighbor not in g_score or temp < g_score[neighbor]:
-                g_score[neighbor] = temp
-                f = temp + heuristic(neighbor, end)
-                heapq.heappush(open_set, (f, neighbor))
-                came_from[neighbor] = current
+            if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
+                if grid[neighbor[0]][neighbor[1]] == 1:
+                    continue
+
+                temp_g = g_score[current] + 1
+
+                if neighbor not in g_score or temp_g < g_score[neighbor]:
+                    g_score[neighbor] = temp_g
+                    f = temp_g + heuristic(neighbor, end)
+                    heapq.heappush(open_list, (f, neighbor))
+                    came_from[neighbor] = current
 
     return []
